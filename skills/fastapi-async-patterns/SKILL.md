@@ -1,19 +1,18 @@
 ---
 name: fastapi-async-patterns
-description: Use when FastAPI async patterns for building high-performance APIs. Use when handling concurrent requests and async operations.
+description: 用于 FastAPI 异步模式相关问题，适用于构建高性能 API、处理并发请求和各类异步操作。
 allowed-tools:
   - Bash
   - Read
 ---
 
-# FastAPI Async Patterns
+# FastAPI 异步模式（Async Patterns）
 
-Master async patterns in FastAPI for building high-performance,
-concurrent APIs with optimal resource usage.
+掌握 FastAPI 中的异步模式（async patterns），用于构建高性能、高并发且资源利用率优秀的 API。
 
-## Basic Async Route Handlers
+## 基础异步路由处理（Basic Async Route Handlers）
 
-Understanding async vs sync endpoints in FastAPI.
+理解 FastAPI 中异步（async）与同步（sync）端点的差异和适用场景。
 
 ```python
 from fastapi import FastAPI
@@ -48,9 +47,9 @@ async def io_intensive():
         return response.json()
 ```
 
-## Async Database Operations
+## 异步数据库操作（Async Database Operations）
 
-Async database patterns with popular ORMs and libraries.
+结合常见 ORM / 库的异步数据库访问模式。
 
 ```python
 from fastapi import FastAPI, Depends, HTTPException
@@ -151,9 +150,9 @@ async def get_tortoise_user(user_id: int):
     return user
 ```
 
-## Background Tasks
+## 后台任务（Background Tasks）
 
-Fire-and-forget tasks without blocking the response.
+执行「即发即弃」（fire-and-forget）任务，而不阻塞主请求响应流程。
 
 ```python
 from fastapi import BackgroundTasks, FastAPI
@@ -219,9 +218,9 @@ async def upload_file(
     return {'filename': file.filename, 'path': temp_path}
 ```
 
-## WebSocket Handling
+## WebSocket 处理（WebSocket Handling）
 
-Real-time bidirectional communication patterns.
+实现实时双向通信（real-time bidirectional communication）相关模式。
 
 ```python
 from fastapi import WebSocket, WebSocketDisconnect, Depends
@@ -316,9 +315,9 @@ async def json_websocket(websocket: WebSocket):
         print('Client disconnected')
 ```
 
-## Server-Sent Events (SSE)
+## Server-Sent Events（SSE）
 
-One-way streaming from server to client.
+从服务端到客户端的「单向流式」推送（one-way streaming）。
 
 ```python
 from fastapi import FastAPI
@@ -371,9 +370,9 @@ async def sse_heartbeat():
     return EventSourceResponse(heartbeat_generator())
 ```
 
-## Streaming Responses
+## 流式响应（Streaming Responses）
 
-Stream large files or generated content.
+用于大文件或动态生成内容的流式输出。
 
 ```python
 from fastapi import FastAPI
@@ -449,9 +448,9 @@ async def generate_report():
     return StreamingResponse(report_stream(), media_type='text/html')
 ```
 
-## Concurrent Request Handling
+## 并发请求处理（Concurrent Request Handling）
 
-Parallel processing patterns for multiple operations.
+针对多个操作/请求进行并行处理的模式。
 
 ```python
 from fastapi import FastAPI
@@ -524,9 +523,9 @@ async def get_fastest_price(product_id: str):
         return result.json()
 ```
 
-## Async Context Managers
+## 异步上下文管理器（Async Context Managers）
 
-Resource management with async context managers.
+使用异步上下文管理器进行资源管理（连接、客户端等）的生命周期控制。
 
 ```python
 from contextlib import asynccontextmanager
@@ -578,9 +577,9 @@ async def get_data():
         return result
 ```
 
-## Connection Pooling
+## 连接池管理（Connection Pooling）
 
-Efficient connection management for databases and HTTP clients.
+为数据库与 HTTP 客户端等提供高效的连接复用和管理。
 
 ```python
 from fastapi import FastAPI, Depends
@@ -652,9 +651,9 @@ async def call_external_api(client: httpx.AsyncClient = Depends(http_pool.get_cl
     return response.json()
 ```
 
-## Performance Optimization
+## 性能优化（Performance Optimization）
 
-Async patterns for optimal performance.
+利用异步模式实现更优的性能和吞吐量。
 
 ```python
 from fastapi import FastAPI
@@ -735,50 +734,104 @@ async def get_post_with_relations(post_id: int, db = Depends(get_db)):
     }
 ```
 
-## When to Use This Skill
+## 何时使用此技能
 
-Use fastapi-async-patterns when:
+在以下情况使用 fastapi-async-patterns：
 
-- Building high-throughput APIs that handle many concurrent requests
-- Working with I/O-bound operations (database, external APIs, file operations)
-- Implementing real-time features (WebSockets, SSE)
-- Processing multiple operations in parallel
-- Streaming large datasets or files
-- Building microservices that communicate with other services
-- Optimizing API response times and resource usage
-- Handling background tasks without blocking responses
+- 构建处理大量并发请求的高吞吐量 API
+- 处理 I/O 密集型操作（数据库、外部 API、文件操作）
+- 实现实时功能（WebSockets, SSE）
+- 并行处理多个操作
+- 流式传输大型数据集或文件
+- 构建与其他服务通信的微服务
+- 优化 API 响应时间和资源使用
+- 处理后台任务而不阻塞响应
 
-## FastAPI Async Best Practices
+## FastAPI 异步最佳实践
 
-1. **Use async for I/O** - Always use async for database, HTTP requests, and
-   file operations
-2. **Avoid blocking calls** - Never use blocking calls in async functions
-   (time.sleep, requests library)
-3. **Connection pooling** - Use connection pools for databases and HTTP
-   clients
-4. **Proper cleanup** - Always clean up resources with try/finally or async
-   context managers
-5. **Concurrent operations** - Use asyncio.gather for parallel operations when possible
-6. **Background tasks** - Use BackgroundTasks for fire-and-forget operations
-7. **Stream large data** - Use StreamingResponse for large files or generated content
-8. **Timeout handling** - Set timeouts on all external calls to prevent hanging
-9. **Error propagation** - Handle exceptions properly in async code
-10. **Monitor performance** - Use tools like aiomonitor to debug async issues
+1. **使用 async 进行 I/O** - 始终对数据库、HTTP 请求和文件操作使用 async
+2. **避免阻塞调用** - 永远不要在 async 函数中使用阻塞调用（如 time.sleep, requests 库）
+3. **连接池** - 为数据库和 HTTP 客户端使用连接池
+4. **适当清理** - 始终使用 try/finally 或异步上下文管理器清理资源
+5. **并发操作** - 尽可能使用 asyncio.gather 进行并行操作
+6. **后台任务** - 对即发即弃的操作使用 BackgroundTasks
+7. **流式传输大数据** - 对大文件或生成的内容使用 StreamingResponse
+8. **超时处理** - 对所有外部调用设置超时以防止挂起
+9. **错误传播** - 在异步代码中正确处理异常
+10. **监控性能** - 使用如 aiomonitor 之类的工具调试异步问题
 
-## FastAPI Async Common Pitfalls
+## FastAPI 异步常见陷阱
 
-1. **Blocking the event loop** - Using synchronous I/O in async functions kills performance
-2. **Missing await** - Forgetting await on async functions causes coroutine warnings
-3. **Creating too many tasks** - Spawning unlimited tasks can exhaust resources
-4. **Not closing connections** - Resource leaks from unclosed database/HTTP connections
-5. **Mixing sync and async** - Incorrect mixing causes event loop issues
-6. **Race conditions** - Shared state in async code without proper locking
-7. **Timeout issues** - No timeouts on external calls can hang the server
-8. **Memory leaks** - Background tasks that never complete accumulate
-9. **Error swallowing** - Silent failures in background tasks and event handlers
-10. **Deadlocks** - Circular waits in async dependencies or locks
+1. **阻塞事件循环** - 在 async 函数中使用同步 I/O 会严重影响性能
+2. **遗漏 await** - 忘记在 async 函数上使用 await 会导致协程警告
+3. **创建过多任务** - 生成无限任务可能会耗尽资源
+4. **未关闭连接** - 未关闭的数据库/HTTP 连接会导致资源泄漏
+5. **混合同步和异步** - 不正确的混合会导致事件循环问题
+6. **竞态条件** - 异步代码中的共享状态没有适当的锁定
+7. **超时问题** - 外部调用没有超时可能会挂起服务器
+8. **内存泄漏** - 永不完成的后台任务会累积
+9. **错误吞没** - 后台任务和事件处理程序中的静默失败
+10. **死锁** - 异步依赖或锁中的循环等待
 
-## Resources
+## 环境配置与 .env 约定
+
+为保证不同服务与环境之间的配置方式一致，建议在项目根目录维护统一的 `.env.example` 文件，并遵循以下约定：
+
+- **.env.example 使用规范**
+  - 仅存放**键名与示例值**，不得包含真实密码、Access Token 等敏感信息。
+  - 开发者本地使用时，从 `.env.example` 复制为 `.env`，再按实际环境修改。
+  - 推荐统一的基础字段：
+    - `APP_ENV`：环境标识，例如 `local` / `dev` / `prod`
+    - `APP_DEBUG`：是否开启调试，例如 `true` / `false`
+    - `LOG_LEVEL`：日志级别，例如 `INFO` / `DEBUG` / `ERROR`
+    - `APP_NAME`: 项目的name,英文和字母,在redis保存数据的时候，需要把APP_NAME作为key的前缀这样可以更加好的保证数据的隔离
+
+- **数据库与缓存配置示例（建议字段命名）**
+  - **PostgreSQL（SQLAlchemy + asyncpg）**
+    - 统一使用：`DATABASE_URL=postgresql+asyncpg://user:password@host:5432/db_name`
+    - 若项目存在多个独立数据库，可加后缀：`DATABASE_URL_ANALYTICS`、`DATABASE_URL_AUTH` 等。
+  - **MySQL（SQLAlchemy + aiomysql）**
+    - 统一使用：`MYSQL_URL=mysql+aiomysql://user:password@host:3306/db_name?charset=utf8mb4`
+    - 或拆分字段（如已有存量代码）：`MYSQL_HOST` / `MYSQL_PORT` / `MYSQL_USER` / `MYSQL_PASSWORD` / `MYSQL_DB`
+  - **Redis（异步客户端）**
+    - 推荐统一使用 URI 形式：`REDIS_URL=redis://user:password@host:6379/0`
+    - 如区分不同用途，可增加前缀：`REDIS_URL_CACHE`、`REDIS_URL_SESSION` 等。
+  - **MongoDB（Motor）**
+    - 推荐统一使用：`MONGODB_URI=mongodb://user:password@host:27017/db_name`
+    - 若使用集群，可采用：`MONGODB_URI=mongodb+srv://user:password@cluster-host/db_name`
+
+> 建议：不同服务/模块之间尽量复用同一套环境变量命名（如统一使用 `DATABASE_URL`、`REDIS_URL`、`MONGODB_URI`），避免出现多种拼写和命名风格，降低维护成本。
+
+## 常用依赖与推荐包
+
+为提高可维护性，推荐在整个项目中对同一类功能统一使用以下包（如无特别原因，不混用多种实现）：
+
+- **Web 框架与服务**
+  - `fastapi`：统一用于构建 API / WebSocket / SSE 等 HTTP 服务。
+  - `uvicorn[standard]`：统一用作 ASGI Server（开发与生产环境均优先使用 uvicorn）。
+
+- **HTTP 客户端**
+  - `httpx`：统一作为 HTTP 客户端，外部 HTTP 调用优先使用 `httpx.AsyncClient`，避免在异步代码中使用 `requests`。
+
+- **数据库与 ORM**
+  - `sqlalchemy`：关系型数据库 ORM，统一使用 SQLAlchemy Async（`AsyncSession` 等）进行异步访问。
+  - `asyncpg`：PostgreSQL 异步驱动，配合 `sqlalchemy` 或直接使用连接池。
+  - `aiomysql`：MySQL 异步驱动，推荐搭配 SQLAlchemy 使用 `mysql+aiomysql://` DSN。
+  - `alembic`：数据库迁移工具，与 SQLAlchemy 配套。
+  - `tortoise-orm`：如需要轻量级异步 ORM，可在项目中统一使用 Tortoise，而不要混用多种 ORM。
+
+- **缓存与存储**
+  - `redis`（4.x+，支持 asyncio）：统一用作 Redis 客户端，不再新引入旧版 `aioredis`；若已有存量 `aioredis` 代码，可在迁移期内保持一致后逐步替换。
+  - `aiocache`：统一用于异步缓存（如内存缓存或 Redis 缓存），避免在不同模块引入多种缓存实现。
+  - `motor`：统一用于 MongoDB 异步客户端（`AsyncIOMotorClient`）。
+
+- **文件与配置**
+  - `python-dotenv`：统一用于加载 `.env` / `.env.example` 中的环境变量。
+  - `aiofiles`：统一用于异步文件读写，避免在 `async` 上下文中使用同步 `open`。
+
+> 上述依赖清单可根据项目实际情况增删，但约定的原则是：**同一类能力（HTTP 客户端、Redis 客户端、ORM 等）项目内尽量只保留一套主方案**，减少心智负担和维护成本。
+
+## 资源
 
 - [FastAPI Async Documentation](https://fastapi.tiangolo.com/async/)
 - [Python asyncio Documentation](https://docs.python.org/3/library/asyncio.html)
@@ -788,3 +841,8 @@ Use fastapi-async-patterns when:
 - [Motor (MongoDB Async)](https://motor.readthedocs.io/)
 - [WebSockets in FastAPI](https://fastapi.tiangolo.com/advanced/websockets/)
 - [Server-Sent Events with Starlette](https://github.com/sysid/sse-starlette)
+
+## 注意事项
+
+1. **关于文档输出**：默认不要主动生成文档内容，除非用户明确提出需求。后端服务的启动步骤说明以及 `README.md` 文档属于例外场景，在相关上下文中可以按需输出。
+2. **关于测试代码**：默认不要编写或输出测试代码（如单元测试、集成测试等）。只有在用户明确要求提供测试代码时，才输出，并且需在回复中**显式说明**「下面的是测试代码」或含义等价的提示。
