@@ -31,7 +31,6 @@ export 'dev_board.dart';
 ```
 
 
-
 ## ui/foundation 设计基础
 
 `foundation/` 目录存放 App 的设计令牌（Design Tokens），统一颜色、圆角、间距与字体，便于全局复用与主题切换。
@@ -46,7 +45,9 @@ export 'dev_board.dart';
 
 > color.dart文件中要定义一个class AppColorScheme,用来支持Dark mode 和 light mode
 
-# 有用的插件(plugin)
+# 常用的插件(plugin)
+
+
 
 ```yaml
 
@@ -97,6 +98,8 @@ export 'dev_board.dart';
   ulid: ^2.0.1
   popover: ^0.4.0
 ```
+
+> 如果功能满足的情况下尽量从上面的plugin中选择插件，因为我比较熟悉方便我维护代码，如果不能满足条件，你可以根据功能从flutter pub dev上搜索插件，尽量选择score和download比较多的插件
 
 ## 插件功能与使用场景
 
@@ -151,13 +154,313 @@ export 'dev_board.dart';
 
 > 部分 Syncfusion 组件需商业许可或社区许可，使用前请确认；表格若有偏差可自行修改。
 
-# 移动端适配
+
+# 多端适配
+
+## 移动端适配
 
 必须使用 **flutter_screenutil** 进行多端适配，设计分辨率是390*844；读取使用mcp读取figma设计稿的宽和高都要进行转化；
 
-- 1.竖屏app相关宽高的数据都要使用.h
+- 1.竖屏app相关宽高的数据都要使用.w
 
-- 2.横屏app相关宽高数据都要使用.w
+- 2.横屏app相关宽高数据都要使用.h
+
+## 电脑端适配
+
+如果flutter项目的目录下包含web,windows,macos,linux等桌面端的时候，编写组件的时候尽量能够适配桌面端。
+
+
+# 动画
+
+> 尽量使用flutter_animate这个组件来实现动画；
+
+## Delay, duration, curve
+
+Effects have optional `delay`, `duration`, and `curve` parameters. Effects run
+in parallel, but you can use a `delay` to run them sequentially:
+
+``` dart
+Text("Hello").animate()
+  .fade(duration: 500.ms)
+  .scale(delay: 500.ms) // runs after fade.
+```
+
+Note that effects are "active" for the duration of the full animation, so for
+example, two fade effects on the same target can have unexpected results
+(`SwapEffect` detailed below, can help address this).
+
+If not specified (or null), these values are inherited from the previous effect,
+or from `Animate.defaultDuration` and `Animate.defaultCurve` if it is the first
+effect:
+
+``` dart
+Text("Hello World!").animate()
+  .fadeIn() // uses `Animate.defaultDuration`
+  .scale() // inherits duration from fadeIn
+  .move(delay: 300.ms, duration: 600.ms) // runs after the above w/new duration
+  .blurXY() // inherits the delay & duration from move
+```
+
+`Animate` has its own `delay` parameter, which defines a delay before the
+animation begins playing. Unlike the delay on an `Effect`, it is only applied
+once if the animation repeats.
+
+``` dart
+Text("Hello").animate(
+    delay: 1000.ms, // this delay only happens once at the very start
+    onPlay: (controller) => controller.repeat(), // loop
+  ).fadeIn(delay: 500.ms) // this delay happens at the start of each loop
+```
+
+## Other Effect Parameters
+
+Most effects include `begin` and `end` parameters, which specify the start/end
+values. These are usually "smart" in the sense that if only one is specified
+then the other will default to a "neutral" value (ie. no visual effect). If
+both are unspecified the effect should use visually pleasing defaults.
+
+``` dart
+// an opacity of 1 is "neutral"
+Text("Hello").animate().fade() // begin=0, end=1
+Text("Hello").animate().fade(begin: 0.5) // end=1
+Text("Hello").animate().fade(end: 0.5) // begin=1
+```
+
+Many effects have additional parameters that influence their behavior. These
+should also use pleasant defaults if unspecified.
+
+``` dart
+Text('Hello').animate().tint(color: Colors.purple)
+```
+
+## Sequencing with ThenEffect
+
+`ThenEffect` is a special convenience "effect" that makes it easier to sequence
+effects. It does this by establishing a new baseline time equal to the previous
+effect's end time and its own optional `delay`. All subsequent effect delays are
+relative to this new baseline.
+
+In the following example, the slide would run 200ms after the fade ended.
+
+``` dart
+Text("Hello").animate()
+  .fadeIn(duration: 600.ms)
+  .then(delay: 200.ms) // baseline=800ms
+  .slide()
+```
+
+## Animating lists
+
+
+The `AnimateList` class offers similar functionality for lists of widgets, with
+the option to offset each child's animation by a specified `interval`:
+
+``` dart
+Column(children: AnimateList(
+  interval: 400.ms,
+  effects: [FadeEffect(duration: 300.ms)],
+  children: [Text("Hello"), Text("World"),  Text("Goodbye")],
+))
+
+// or shorthand:
+Column(
+  children: [Text("Hello"), Text("World"),  Text("Goodbye")]
+    .animate(interval: 400.ms).fade(duration: 300.ms),
+)
+```
+
+## Shared effects
+
+
+Because `Effect` instances are immutable, they can be reused. This makes it easy
+to create a global collection of effects that are used throughout your app and
+updated in one place. This is also useful for design systems.
+
+``` dart
+MyGlobalEffects.transitionIn = <Effect>[
+  FadeEffect(duration: 100.ms, curve: Curves.easeOut),
+  ScaleEffect(begin: 0.8, curve: Curves.easeIn)
+]
+
+// then:
+Text('Hello').animate(effects: MyGlobalEffects.transitionIn)
+```
+
+
+## Custom effects & builders
+
+It is easy to write new resuable effects by extending `Effect`, but you can also
+easily create one-off custom effects by using `CustomEffect`, `ToggleEffect`,
+and `SwapEffect`.
+
+## CustomEffect
+
+
+`CustomEffect` lets you build custom animated effects. Simply specify a
+`builder` function that accepts a `context`, `value`, and `child`. The child is
+the target of the animation (which may already have been wrapped in other
+effects).
+
+For example, this would add a background behind the text and fade it from red to
+blue:
+
+``` dart
+Text("Hello World").animate().custom(
+  duration: 300.ms,
+  builder: (context, value, child) => Container(
+    color: Color.lerp(Colors.red, Colors.blue, value),
+    padding: EdgeInsets.all(8),
+    child: child, // child is the Text widget being animated
+  )
+)
+```
+
+By default it provides a `value` from `0-1` (though some curves can generate
+values outside this range), based on the current time, duration, and curve. You
+can also specify `begin` and `end` values as demonstrated in the example below.
+
+`Animate` can be created without a child, so you use `CustomEffect` as a
+simplified builder. For example, this would build text counting down from 10,
+and fading out:
+
+``` dart
+Animate().custom(
+  duration: 10.seconds,
+  begin: 10,
+  end: 0,
+  builder: (_, value, __) => Text(value.round()),
+).fadeOut()
+```
+
+
+## ToggleEffect
+
+`ToggleEffect` also provides builder functionality, but instead of a `double`,
+it provides a boolean value equal to `true` before the end of the effect and
+`false` after (ie. after its duration).
+
+``` dart
+Animate().toggle(
+  duration: 2.seconds,
+  builder: (_, value, __) => Text(value ? "Before" : "After"),
+)
+```
+
+This can also be used to activate "Animated" widgets, like `AnimatedContainer`,
+by toggling their values with a minimal delay:
+
+``` dart
+Animate().toggle(
+  duration: 1.ms,
+  builder: (_, value, __) => AnimatedContainer(
+    duration: 1.seconds,
+    color: value ? Colors.red : Colors.green,
+  ),
+)
+```
+
+## SwapEffect
+
+
+`SwapEffect` lets you swap out the whole target widget at a specified time:
+
+``` dart
+Text("Before").animate()
+  .swap(duration: 900.ms, builder: (_, __) => Text("After"))
+```
+
+This can also be useful for creating sequential effects, by swapping the target
+widget back in, effectively wiping all previous effects:
+
+``` dart
+text.animate().fadeOut(300.ms) // fade out & then...
+  // swap in original widget & fade back in via a new Animate:
+  .swap(builder: (_, child) => child.animate().fadeIn())
+```
+
+## ShaderEffect
+
+`ShaderEffect` makes it easy to apply animated GLSL fragment shaders to widgets.
+See the docs for details.
+
+``` dart
+myWidget.animate()
+  .shader(duration: 2.seconds, shader: myShader)
+  .fadeIn(duration: 300.ms) // shader can be combined with other effects
+```
+
+
+## Events & callbacks
+
+
+`Animate` includes the following callbacks:
+
+- `onInit`: the internal `AnimationController` has been initialized
+- `onPlay`: the animation has started playing after any `Animate.delay`
+- `onComplete`: the animation has finished
+
+These callbacks return the `AnimationController`, which can be used to
+manipulate the animation (ex. repeat, reverse, etc).
+
+``` dart
+Text("Horrible Pulsing Text")
+  .animate(onPlay: (controller) => controller.repeat(reverse: true))
+  .fadeOut(curve: Curves.easeInOut)
+```
+
+For more nuanced callbacks, use `CallbackEffect` or `ListenEffect`.
+
+## CallbackEffect
+
+
+`CallbackEffect` lets you add a callback to an arbitrary postion in your
+animations. For example, adding a callback halfway through a fade:
+
+``` dart
+Text("Hello").animate().fadeIn(duration: 600.ms)
+  .callback(duration: 300.ms, callback: (_) => print('halfway'))
+```
+
+As with other effects, it will inherit the delay and duration of prior effects:
+
+``` dart
+Text("Hello").animate().scale(delay: 200.ms, duration: 400.ms)
+  .callback(callback: (_) => print('scale is done'))
+```
+
+## ListenEffect
+
+
+`ListenEffect` lets you register a callback to receive the animation value (as a
+`double`) for a given delay, duration, curve, begin, and end.
+
+``` dart
+Text("Hello").animate().fadeIn(curve: Curves.easeOutExpo)
+  .listen(callback: (value) => print('current opacity: $value'))
+```
+
+The above example works, because the listen effect inherits duration and curve
+from the fade, and both use `begin=0, end=1` by default.
+
+
+## Adapters and Controllers
+
+
+By default, all animations are driven by an internal `AnimationController`, and
+update based on elapsed time. For more control, you can specify your own
+external `controller`, or use an `adapter`. You can also set `autoPlay=false` if
+you want to start the animation manually.
+
+Adapters synchronize the `AnimationController` to an external source. For
+example, the `ScrollAdapter` updates an animation based on a `ScrollController`
+so you can run complex animations based on scroll interactions.
+
+You still define animations using durations, but the external source must
+provide a `0-1` value.
+
+Flutter Animate ships with a collection of useful adapters. Check them out for
+more information.
+
 
 # GetX 状态管理模式（State Management Patterns）
 
@@ -390,6 +693,42 @@ Get.bottomSheet(
 - 不要过度依赖全局状态（global state）
 - 不要制造循环依赖（circular dependencies）
 
+
+### Dart 3.x Features
+
+### Pattern Matching
+```dart
+String describeUser(User user) {
+  return switch (user) {
+    User(role: 'admin', isActive: true) => 'Active administrator',
+    User(role: 'user', isActive: true) => 'Active user',
+    User(isActive: false) => 'Inactive account',
+    _ => 'Unknown status',
+  };
+}
+```
+
+### Records
+```dart
+(int, String) getUserInfo() => (123, 'John Doe');
+
+final (id, name) = getUserInfo();
+```
+
+### Sealed Classes
+```dart
+sealed class Result<T> {}
+class Success<T> extends Result<T> {
+  final T data;
+  Success(this.data);
+}
+class Error<T> extends Result<T> {
+  final String message;
+  Error(this.message);
+}
+```
+
+
 ## 需要避免的 Anti-Patterns
 
 ```dart
@@ -418,3 +757,154 @@ class UserController extends GetxController {
   }
 }
 ```
+
+## 文件命名规范（File Naming Conventions）
+
+- **Files**: `snake_case.dart`
+- **Classes**: `PascalCase`
+- **Variables/Functions**: `camelCase`
+- **Constants**: `lowerCamelCase` or `SCREAMING_SNAKE_CASE` for compile-time constants
+
+```dart
+// user_controller.dart
+class UserController extends GetxController {
+  static const int maxRetries = 3;
+  static const String BASE_URL = 'https://api.example.com';
+  
+  final userName = 'John'.obs;
+  
+  void fetchUserData() {
+    // ...
+  }
+}
+```
+
+## Null Safety
+
+```dart
+// Use late for non-nullable fields initialized later
+class MyController extends GetxController {
+  late final UserRepository repository;
+  
+  @override
+  void onInit() {
+    super.onInit();
+    repository = Get.find();
+  }
+}
+
+// Use ? for nullable types
+String? userName;
+
+// Use ! only when absolutely certain
+final name = userName!; // Use sparingly
+
+// Prefer ?? for defaults
+final displayName = userName ?? 'Guest';
+```
+
+## Async/Await Best Practices
+
+```dart
+// Use async/await for asynchronous operations
+Future<User> fetchUser(String id) async {
+  try {
+    final response = await client.get(Uri.parse('/users/$id'));
+    return User.fromJson(jsonDecode(response.body));
+  } on SocketException {
+    throw NetworkException();
+  } catch (e) {
+    throw UnknownException(e.toString());
+  }
+}
+
+// Use Future.wait for parallel operations
+Future<void> loadAllData() async {
+  final results = await Future.wait([
+    fetchUsers(),
+    fetchSettings(),
+    fetchPreferences(),
+  ]);
+}
+
+// Use unawaited for fire-and-forget
+unawaited(analytics.logEvent('page_view'));
+```
+
+## Code Organization Within Files
+
+```dart
+class MyClass {
+  // 1. Constants
+  static const int maxRetries = 3;
+  
+  // 2. Static fields
+  static final instance = MyClass._();
+  
+  // 3. Instance fields
+  final String id;
+  final _isLoading = false.obs;
+  
+  // 4. Constructors
+  MyClass(this.id);
+  MyClass._();
+  
+  // 5. Getters/Setters
+  bool get isLoading => _isLoading.value;
+  
+  // 6. Lifecycle methods
+  @override
+  void onInit() {}
+  
+  // 7. Public methods
+  void publicMethod() {}
+  
+  // 8. Private methods
+  void _privateMethod() {}
+}
+```
+
+## Widget Best Practices
+
+```dart
+// Prefer const constructors
+class MyWidget extends StatelessWidget {
+  const MyWidget({Key? key}) : super(key: key);
+  
+  @override
+  Widget build(BuildContext context) {
+    return const Text('Hello');
+  }
+}
+
+// Extract widgets for reusability
+class UserCard extends StatelessWidget {
+  final User user;
+  
+  const UserCard({Key? key, required this.user}) : super(key: key);
+  
+  @override
+  Widget build(BuildContext context) {
+    return Card(
+      child: _buildContent(),
+    );
+  }
+  
+  Widget _buildContent() {
+    return Column(
+      children: [
+        Text(user.name),
+        Text(user.email),
+      ],
+    );
+  }
+}
+```
+
+
+
+## 注意事项
+
+1. **关于文档输出**：默认不要主动生成文档内容，除非用户明确提出需求。项目模块说明以及 `README.md` 文档属于例外场景，在相关上下文中可以按需输出。
+2. **关于测试代码**：默认不要编写或输出测试代码（如单元测试、集成测试等）。只有在用户明确要求提供测试代码时，才输出，并且需在回复中**显式说明**「下面的是测试代码」或含义等价的提示。
+3. **代码注释**：逻辑简单的代码片段，为必要不要添加注释，但是代码逻辑复杂涉及到公式计算等的场景下，可以酌情添加注释；函数功能描述的注释和参数的注释，有必要可以添加
